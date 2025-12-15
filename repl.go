@@ -15,17 +15,27 @@ func cleanInput(text string) []string {
 
 func repl() {
 	for {
+		// Take user input
 		scanner := bufio.NewScanner(os.Stdin)
 		fmt.Print("Pokedex > ")
 		scanner.Scan()
 		userInput := scanner.Text()
 		cleanUserInput := cleanInput(userInput)
-
 		if len(cleanUserInput) == 0 {
 			continue
 		}
 
-		fmt.Printf("Your Command Was word: %s \n", cleanUserInput[0])
-	}
+		// Find and run user command
+		found := false
+		for _, command := range commands {
+			if command.name == cleanUserInput[0] {
+				found = true
+				command.callback()
+			}
+		}
+		if !found {
+			fmt.Println("Unknown command")
 
+		}
+	}
 }
