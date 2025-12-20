@@ -6,9 +6,6 @@ import (
 	"log"
 	"os"
 	"strings"
-	"time"
-
-	"github.com/C0Mon/pokedexcli/internal/pokecache"
 )
 
 func cleanInput(text string) []string {
@@ -22,8 +19,6 @@ func repl() {
 		Next:     "https://pokeapi.co/api/v2/location-area/1",
 		Previous: "https://pokeapi.co/api/v2/location-area/1",
 	}
-
-	c = pokecache.NewCache(5 * time.Second)
 
 	for {
 		// Take user input
