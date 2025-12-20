@@ -10,46 +10,48 @@ type cacheEntry struct {
 	val       []byte
 }
 
-type cache struct {
+type Cache struct {
 	data     map[string]cacheEntry
 	interval time.Duration
 	mu       sync.Mutex
 }
 
-func NewCache(duration time.Duration) cache {
-	c := cache{
+func NewCache(duration time.Duration) Cache {
+	c := Cache{
 		data:     map[string]cacheEntry{},
 		interval: duration,
 	}
+	go c.reapLoop()
 	return c
 }
 
-func (c *cache) Add(key string, val []byte) {
-	c.mu.Unlock()
+func (c *Cache) Add(key string, val []byte) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	c.data[key] = cacheEntry{
 		createdAt: time.Now(),
 		val:       val,
 	}
-	c.mu.Lock()
 }
 
-func (c *cache) Get(key string) ([]byte, bool) {
-	c.mu.Unlock()
-	val, exists := c.data[key]
+func (c *Cache) Get(key string) ([]byte, bool) {
 	c.mu.Lock()
+	defer c.mu.Unlock()
+	val, exists := c.data[key]
 	return val.val, exists
 }
 
-func (c *cache) reapLoop() {
+// Runs in the background
+// Deletes cache entries that have been in too long
+func (c *Cache) reapLoop() {
 	ticker := time.NewTicker(c.interval)
-	for {
-		_ = ticker.C
-		c.mu.Unlock()
-		for key, _ := range c.data {
-			if time.Since(c.data[key].createdAt) > c.interval {
+	for range ticker.C {
+		c.mu.Lock()
+		for key, entry := range c.data {
+			if time.Since(entry.createdAt) > c.interval {
 				delete(c.data, key)
 			}
 		}
-		c.mu.Lock()
+		c.mu.Unlock()
 	}
 }

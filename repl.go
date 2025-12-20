@@ -6,7 +6,16 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
+
+	"github.com/C0Mon/pokedexcli/internal/pokeapi"
 )
+
+type config struct {
+	pokeapiClient pokeapi.Client
+	Next          string
+	Previous      string
+}
 
 func cleanInput(text string) []string {
 	lowerText := strings.ToLower(text)
@@ -16,8 +25,9 @@ func cleanInput(text string) []string {
 
 func repl() {
 	configs := config{
-		Next:     "https://pokeapi.co/api/v2/location-area/1",
-		Previous: "https://pokeapi.co/api/v2/location-area/1",
+		pokeapiClient: pokeapi.NewClient(60*time.Second, 5*time.Second),
+		Next:          "https://pokeapi.co/api/v2/location-area/1",
+		Previous:      "https://pokeapi.co/api/v2/location-area/1",
 	}
 
 	for {
@@ -44,7 +54,6 @@ func repl() {
 		}
 		if !found {
 			fmt.Println("Unknown command")
-
 		}
 	}
 }

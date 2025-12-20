@@ -8,11 +8,6 @@ import (
 	"strconv"
 )
 
-type config struct {
-	Next     string
-	Previous string
-}
-
 type cliCommand struct {
 	name        string
 	description string
@@ -62,18 +57,19 @@ func commandExit(*config) error {
 }
 
 func commandMap(cfg *config) error {
+	// Get url and id
 	splitUrl, err := splitAtXAfterN(cfg.Next, '/', 6)
 	if err != nil {
 		return err
 	}
 	url := splitUrl[0]
-	fmt.Printf("%s :  %s\n", splitUrl[0], splitUrl[1])
 	id, err := strconv.Atoi(splitUrl[1])
 	if err != nil {
 		return err
 	}
 
-	err = mapArea(url, id)
+	// map the area
+	err = mapArea(url, id, cfg)
 	if err != nil {
 		return err
 	}
@@ -88,16 +84,16 @@ func commandMapb(cfg *config) error {
 		return err
 	}
 	url := splitUrl[0]
-	fmt.Printf("%s :  %s\n", splitUrl[0], splitUrl[1])
 	id, err := strconv.Atoi(splitUrl[1])
 	if err != nil {
 		return err
 	}
+
 	if id < 1 {
 		fmt.Println("you're on the first page")
 		return nil
 	}
-	err = mapArea(url, id)
+	err = mapArea(url, id, cfg)
 	if err != nil {
 		return err
 	}
@@ -106,11 +102,11 @@ func commandMapb(cfg *config) error {
 	return nil
 }
 
-func mapArea(url string, id int) error {
+func mapArea(url string, id int, cfg *config) error {
 
 	for i := 0; i < 20; i++ {
 		newUrl := url + strconv.Itoa(i+id)
-		data, err := getData(newUrl)
+		data, err := cfg.pokeapiClient.GetData(newUrl)
 		if err != nil {
 			return err
 		}

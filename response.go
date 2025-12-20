@@ -1,21 +1,5 @@
 package main
 
-import (
-	"fmt"
-	"io"
-	"net/http"
-)
-
-func getData(url string) ([]byte, error) {
-	res, err := http.Get(url)
-	if err != nil {
-		return nil, fmt.Errorf("error creating request: %w", err)
-	}
-	defer res.Body.Close()
-	body, err := io.ReadAll(res.Body)
-	return body, nil
-}
-
 type LocationArea struct {
 	EncounterMethodRates []struct {
 		EncounterMethod struct {
