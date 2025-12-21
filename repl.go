@@ -25,7 +25,7 @@ func cleanInput(text string) []string {
 
 func repl() {
 	configs := config{
-		pokeapiClient: pokeapi.NewClient(60*time.Second, 5*time.Second),
+		pokeapiClient: pokeapi.NewClient(60*time.Second, 30*time.Second),
 		Next:          "https://pokeapi.co/api/v2/location-area/1",
 		Previous:      "https://pokeapi.co/api/v2/location-area/1",
 	}

@@ -18,6 +18,7 @@ func TestCleanInput(t *testing.T) {
 			expected: []string{"charmander", "bulbasaur", "pikachu"},
 		},
 	}
+
 	for _, c := range cases {
 		actual := cleanInput(c.input)
 		if len(actual) != len(c.expected) {
