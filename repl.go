@@ -15,6 +15,8 @@ type config struct {
 	pokeapiClient pokeapi.Client
 	Next          string
 	Previous      string
+	Arguments     []string
+	Pokedex       map[string]Pokemon
 }
 
 func cleanInput(text string) []string {
@@ -28,6 +30,7 @@ func repl() {
 		pokeapiClient: pokeapi.NewClient(60*time.Second, 30*time.Second),
 		Next:          "https://pokeapi.co/api/v2/location-area/1",
 		Previous:      "https://pokeapi.co/api/v2/location-area/1",
+		Pokedex:       map[string]Pokemon{},
 	}
 
 	for {
@@ -40,6 +43,8 @@ func repl() {
 		if len(cleanUserInput) == 0 {
 			continue
 		}
+
+		configs.Arguments = cleanUserInput
 
 		// Find and run user command
 		found := false
