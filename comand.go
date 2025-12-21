@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+
+	"github.com/C0Mon/pokedexcli/internal/pokeerrors"
 )
 
 type cliCommand struct {
@@ -56,6 +58,7 @@ func commandExit(*config) error {
 	return nil
 }
 
+// Call pokeapi for the next 20 areas
 func commandMap(cfg *config) error {
 	// Get url and id
 	splitUrl, err := splitAtXAfterN(cfg.Next, '/', 6)
@@ -71,6 +74,11 @@ func commandMap(cfg *config) error {
 	// map the area
 	err = mapArea(url, id, cfg)
 	if err != nil {
+		var nfe *pokeerrors.NotFoundError
+		if errors.As(err, &nfe) {
+			fmt.Println(err.Error())
+			return nil
+		}
 		return err
 	}
 	cfg.Previous = cfg.Next
@@ -78,6 +86,7 @@ func commandMap(cfg *config) error {
 	return nil
 }
 
+// Call pokeapi for the previous 20 areas
 func commandMapb(cfg *config) error {
 	splitUrl, err := splitAtXAfterN(cfg.Previous, '/', 6)
 	if err != nil {
@@ -95,6 +104,11 @@ func commandMapb(cfg *config) error {
 	}
 	err = mapArea(url, id, cfg)
 	if err != nil {
+		var nfe *pokeerrors.NotFoundError
+		if errors.As(err, &nfe) {
+			fmt.Println(err.Error())
+			return nil
+		}
 		return err
 	}
 	cfg.Next = cfg.Previous
@@ -113,6 +127,11 @@ func mapArea(url string, id int, cfg *config) error {
 		locationArea := LocationArea{}
 		err = json.Unmarshal(data, &locationArea)
 		if err != nil {
+			if string(data[:]) == "Not Found" {
+				return &pokeerrors.NotFoundError{
+					Entity: "Areas",
+				}
+			}
 			return err
 		}
 		fmt.Println(locationArea.Name)
