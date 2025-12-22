@@ -57,7 +57,23 @@ func init() {
 			description: "Inspect the stats of a pokemon\nCommand: inspect {pokemon}",
 			callback:    commandInspect,
 		},
+		"pokedex": {
+			name:        "pokedex",
+			description: "List all caught pokemon in the pokedex",
+			callback:    commandPokedex,
+		},
 	}
+}
+
+func commandPokedex(cfg *config) error {
+	if len(cfg.Pokedex) == 0 {
+		return fmt.Errorf("Your Pokedex is empty :(\nUse the catch command to catch some pokemon and fill it!\n")
+	}
+	fmt.Println("Your Pokedex:")
+	for _, v := range cfg.Pokedex {
+		fmt.Printf(" - %s\n", v.Name)
+	}
+	return nil
 }
 
 func commandInspect(cfg *config) error {
@@ -114,7 +130,7 @@ func commandCatch(cfg *config) error {
 		return fmt.Errorf("Pokemon not found\n")
 	}
 
-	fmt.Printf("Throwing a Pokeball at %s...", pokemon.Name)
+	fmt.Printf("Throwing a Pokeball at %s...\n", pokemon.Name)
 	chance := 100 * math.Log10(float64(pokemon.BaseExperience)*0.01)
 	if chance < float64(rand.IntN(100)) {
 		cfg.Pokedex[name] = pokemon
@@ -122,6 +138,7 @@ func commandCatch(cfg *config) error {
 	} else {
 		fmt.Printf("%s escaped!\n", pokemon.Name)
 	}
+	fmt.Printf("You may now inspect it with the inspect command.")
 	return nil
 }
 
@@ -154,12 +171,17 @@ func commandExplore(cfg *config) error {
 	// Get data from api
 	data, err := cfg.pokeapiClient.GetData(url)
 	if err != nil {
-		return fmt.Errorf("Area not found\n")
+		return fmt.Errorf("API request could not be made\n")
 	}
 	// Unmarshal response into struct
 	locationArea := LocationArea{}
 	err = json.Unmarshal(data, &locationArea)
 	if err != nil {
+		if string(data[:]) == "Not Found" {
+			return &pokeerrors.NotFoundError{
+				Entity: "Area",
+			}
+		}
 		return fmt.Errorf("unexpected response type\n")
 	}
 
@@ -217,7 +239,7 @@ func commandMapb(cfg *config) error {
 	}
 	err = mapArea(url, id, cfg)
 	if err != nil {
-		return fmt.Errorf("Data not found\n")
+		return err
 	}
 	cfg.Next = cfg.Previous
 	cfg.Previous = url + strconv.Itoa(id-20)
@@ -237,7 +259,7 @@ func mapArea(url string, id int, cfg *config) error {
 		if err != nil {
 			if string(data[:]) == "Not Found" {
 				return &pokeerrors.NotFoundError{
-					Entity: "Areas",
+					Entity: "Area",
 				}
 			}
 			return err
