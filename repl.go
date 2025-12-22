@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"log"
 	"os"
 	"strings"
 	"time"
@@ -53,7 +52,7 @@ func repl() {
 				found = true
 				err := command.callback(&configs)
 				if err != nil {
-					log.Fatal(err)
+					fmt.Printf("Err: %s", err.Error())
 				}
 			}
 		}

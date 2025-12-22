@@ -52,13 +52,44 @@ func init() {
 			description: "Catch a pokemon\nCommand: catch {pokemon}",
 			callback:    commandCatch,
 		},
+		"inspect": {
+			name:        "inspect",
+			description: "Inspect the stats of a pokemon\nCommand: inspect {pokemon}",
+			callback:    commandInspect,
+		},
 	}
+}
+
+func commandInspect(cfg *config) error {
+	if len(cfg.Arguments) < 2 {
+		return fmt.Errorf("Invalid command. Please type as %s {pokemon}\n", cfg.Arguments[0])
+	}
+	name := cfg.Arguments[1]
+
+	data, exists := cfg.Pokedex[name]
+	if !exists {
+
+		return fmt.Errorf("Unknown Pokemon\n")
+	}
+
+	fmt.Printf("Name: %s\n", data.Name)
+	fmt.Printf("Height: %d\n", data.Height)
+	fmt.Printf("Weigth: %d\n", data.Weight)
+	fmt.Println("Stats:")
+	for _, v := range data.Stats {
+		fmt.Printf(" - %s:	%d\n", v.Stat.Name, v.BaseStat)
+	}
+
+	fmt.Println("Types:")
+	for _, v := range data.Types {
+		fmt.Printf(" - %s\n", v.Type.Name)
+	}
+	return nil
 }
 
 func commandCatch(cfg *config) error {
 	if len(cfg.Arguments) < 2 {
-		fmt.Printf("Invalid command. Please type as %s {pokemon}\n", cfg.Arguments[0])
-		return nil
+		return fmt.Errorf("Invalid command. Please type as %s {pokemon}\n", cfg.Arguments[0])
 	}
 	name := cfg.Arguments[1]
 
@@ -72,7 +103,7 @@ func commandCatch(cfg *config) error {
 	// Get data from api
 	data, err := cfg.pokeapiClient.GetData(url)
 	if err != nil {
-		fmt.Println("Pokemon not found")
+		fmt.Errorf("Pokemon not found\n")
 		return nil
 	}
 
@@ -80,7 +111,7 @@ func commandCatch(cfg *config) error {
 
 	err = json.Unmarshal(data, &pokemon)
 	if err != nil {
-		return fmt.Errorf("unexpected response type")
+		return fmt.Errorf("Pokemon not found\n")
 	}
 
 	fmt.Printf("Throwing a Pokeball at %s...", pokemon.Name)
@@ -111,8 +142,7 @@ func commandExit(*config) error {
 
 func commandExplore(cfg *config) error {
 	if len(cfg.Arguments) < 2 {
-		fmt.Println("Invalid command. Please type as explore {area}")
-		return nil
+		return fmt.Errorf("Invalid command. Please type as explore {area}\n")
 	}
 
 	// Get url
@@ -124,14 +154,13 @@ func commandExplore(cfg *config) error {
 	// Get data from api
 	data, err := cfg.pokeapiClient.GetData(url)
 	if err != nil {
-		fmt.Println("Area not found")
-		return nil
+		return fmt.Errorf("Area not found\n")
 	}
 	// Unmarshal response into struct
 	locationArea := LocationArea{}
 	err = json.Unmarshal(data, &locationArea)
 	if err != nil {
-		return fmt.Errorf("unexpected response type")
+		return fmt.Errorf("unexpected response type\n")
 	}
 
 	// Output
@@ -163,8 +192,7 @@ func commandMap(cfg *config) error {
 			fmt.Println(err.Error())
 			return nil
 		}
-		fmt.Println("Data not found")
-		return nil
+		return fmt.Errorf("Data not found\n")
 	}
 	cfg.Previous = cfg.Next
 	cfg.Next = url + strconv.Itoa(id+20)
@@ -189,13 +217,7 @@ func commandMapb(cfg *config) error {
 	}
 	err = mapArea(url, id, cfg)
 	if err != nil {
-		var nfe *pokeerrors.NotFoundError
-		if errors.As(err, &nfe) {
-			fmt.Println(err.Error())
-			return nil
-		}
-		fmt.Println("Data not found")
-		return nil
+		return fmt.Errorf("Data not found\n")
 	}
 	cfg.Next = cfg.Previous
 	cfg.Previous = url + strconv.Itoa(id-20)
