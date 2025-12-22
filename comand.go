@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
+	"math/rand/v2"
 	"os"
 	"strconv"
 
@@ -42,8 +44,13 @@ func init() {
 		},
 		"explore": {
 			name:        "explore",
-			description: "List all pokemon in an area. Enter as \"explore {area}\"",
+			description: "List all pokemon in an area\nCommand: explore {area}",
 			callback:    commandExplore,
+		},
+		"catch": {
+			name:        "catch",
+			description: "Catch a pokemon\nCommand: catch {pokemon}",
+			callback:    commandCatch,
 		},
 	}
 }
@@ -60,7 +67,7 @@ func commandCatch(cfg *config) error {
 	if err != nil {
 		return err
 	}
-	url := splitUrl[0] + "pokemon" + name
+	url := splitUrl[0] + "pokemon/" + name
 
 	// Get data from api
 	data, err := cfg.pokeapiClient.GetData(url)
@@ -76,7 +83,14 @@ func commandCatch(cfg *config) error {
 		return fmt.Errorf("unexpected response type")
 	}
 
-	cfg.Pokedex[name] = pokemon
+	fmt.Printf("Throwing a Pokeball at %s...", pokemon.Name)
+	chance := 100 * math.Log10(float64(pokemon.BaseExperience)*0.01)
+	if chance < float64(rand.IntN(100)) {
+		cfg.Pokedex[name] = pokemon
+		fmt.Printf("%s was caught!\n", pokemon.Name)
+	} else {
+		fmt.Printf("%s escaped!\n", pokemon.Name)
+	}
 	return nil
 }
 
@@ -107,14 +121,12 @@ func commandExplore(cfg *config) error {
 		return err
 	}
 	url := splitUrl[0] + cfg.Arguments[1]
-
 	// Get data from api
 	data, err := cfg.pokeapiClient.GetData(url)
 	if err != nil {
 		fmt.Println("Area not found")
 		return nil
 	}
-
 	// Unmarshal response into struct
 	locationArea := LocationArea{}
 	err = json.Unmarshal(data, &locationArea)
